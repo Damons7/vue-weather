@@ -1,0 +1,238 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: #f3f3f3;
+        }
+
+        :root {
+            /* 天气主体的头部高度 */
+            --weatherHeader: 20%;
+            /* 天气主体的主体高度 */
+            --weatherMain: 60%;
+            /* 天气主体的尾部高度 */
+            --weatherFooter: 20%;
+        }
+
+        #myWeather {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            margin: auto;
+            width: 500px;
+            height: 500px;
+            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+            transition: 0.3s;
+            border-radius: 5px;
+            background: linear-gradient(to bottom, #96cedf 0%, #fff 100%)
+        }
+
+        .title {
+            text-align: center;
+            width: 100%;
+            height: var(--weatherHeader);
+            line-height: 80px;
+            position: relative;
+        }
+
+        .weatherLogo {
+            position: absolute;
+            top: 16%;
+            right: 6%;
+        }
+
+        .weather {
+            width: 100%;
+            height: var(--weatherMain);
+            text-align: center;
+            font-size: 10px;
+        }
+
+        .weatherHeader {
+            height: var(--weatherHeader);
+        }
+
+        .weatherHeader>select {
+            border: none;
+            outline: none;
+            background-color: transparent;
+            padding: 6px;
+            font-size: 18px;
+        }
+
+        .weatherMain {
+            height: var(--weatherMain);
+            /* background-color: gray; */
+            font-size: 8em;
+        }
+
+        .weatherFooter {
+            height: var(--weatherFooter);
+        }
+
+        .weatherFooter>div {
+            margin: 10px;
+            font-size: 16px;
+        }
+
+        .flexCenter {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .footer {
+            text-align: center;
+            width: 100%;
+            height: var(--weatherFooter);
+            line-height: 80px;
+        }
+
+        .myInformation{
+            position: fixed;
+            height: 40px;
+            line-height: 40px;
+            text-align: center;
+            width: 100%;
+            color: #999;
+            bottom: 0;
+        }
+        /*先渲染*/
+        [v-cloak] {
+            opacity: 0;
+        }
+    </style>
+
+</head>
+
+<body>
+    <main id="myWeather" v-cloak>
+        <!-- 天气标题 -->
+        <h3 class="title">
+            {{cityName}}天气
+            <img :src=weatherInformation.imgPath class="weatherLogo">
+        </h3>
+        <section class="weather">
+            <!-- 天气主体头部（地理位置） -->
+            <h4 class="weatherHeader flexCenter">
+                <select name="weathers" id="weathers" @change="getWeather">
+                    <option v-for="myCity in citys" :key="myCity.city" :value="myCity.city">
+                        {{ myCity.name }}
+                    </option>
+                </select>
+            </h4>
+            <!-- 天气主体部分（温度显示） -->
+            <section class="weatherMain flexCenter">
+                {{weatherInformation.temperature}}°C
+            </section>
+            <!-- 天气主体尾部（风向，风力相对湿度） -->
+            <section class="weatherFooter flexCenter">
+                <div>{{weatherInformation.winddirection}}风</div>
+                <div>{{weatherInformation.windpower}}级</div>
+                <div>相对湿度：{{weatherInformation.humidity}}%</div>
+            </section>
+        </section>
+        <footer class="footer">
+            <small>
+                更新于{{weatherInformation.reporttime}}
+            </small>
+        </footer>
+    </main>
+    <div class="myInformation">
+        创作来自   xxx   2020.11.05
+    </div>
+</body>
+<script type="text/javascript" src="js/vuejs-2.5.16.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script>
+    var weather = new Vue({
+        el: '#myWeather',
+        data: {
+            //城市对象
+            citys: [
+                { name: '南山区', city: 440305 },
+                { name: '福田区', city: 440304 },
+                { name: '罗湖区', city: 440303 },
+                { name: '宝安区', city: 440306 },
+                { name: '龙岗区', city: 440307 },
+                { name: '盐田区', city: 440308 },
+                { name: '龙华区', city: 440309 },
+                { name: '坪山区', city: 440310 },
+                { name: '光明区', city: 110101 },
+
+            ],
+            //天气信息
+            weatherInformation: {
+                //路径
+                imgPath: "./weatherImg/cloud.png"
+                
+            },
+            cityName: "深圳"
+
+        },
+        created() {
+            this.getData();
+        },
+        methods: {
+            //获取数据并渲染
+            getWeather(e) {
+                key = e.target.value;
+                this.getData(key)
+            },
+            //默认调用第一个区
+            key(index = 0) {
+                return this.citys[index].city
+            },
+            //axios调用接口
+            getData(key) {
+                if (!key) {
+                    key = this.key();
+                }
+		//这里的地址请自行高德地图获取
+                axios.get('https://...=' + key)
+                    .then((res) => {
+                        let data = res.data.lives[0];
+                        console.log(data);
+                        const entries = Object.entries(data)
+
+                        for (const [attr, value] of entries) {
+                            this.$set(this.weatherInformation,attr,value)
+                        }
+                        this.getWeatherImgPath();
+                    })
+                    .catch(function (err) {
+                        console.log("错误", err);
+                    })
+            },
+            getWeatherImgPath() {
+                let weatherObj = this.weatherInformation;
+                if (weatherObj.weather) {
+                    let obj = {
+                        sun: { value: ["晴","晴天"], path: "./weatherImg/sun.png" },
+                        rain: { value: ["小雨", "阵雨", "大雨", "中雨"], path: "./weatherImg/rain.png" },
+                        cloud: { value: ["多云", "少云", "云"], path: "./weatherImg/cloud.png" }
+                    }   
+                    weatherObj.imgPath = Object.values(obj).find(item => item.value.includes(weatherObj.weather)).path;
+                }
+
+
+            }
+
+        }
+
+    })
+</script>
+
+</html>
